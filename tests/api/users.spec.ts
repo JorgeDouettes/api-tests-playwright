@@ -12,6 +12,16 @@ interface UserResponse {
   data: User;
 }
 
+interface CreateUserRequest {
+  name: string;
+  job: string;
+}
+
+interface CreateUserResponse extends CreateUserRequest {
+  id: string;
+  createdAt: string;
+}
+
 test.describe('GET /users/:id', () => {
   test('deve retornar 200 e os dados corretos do usuário quando o ID existe', async ({
     request,
@@ -40,5 +50,23 @@ test.describe('GET /users/:id', () => {
     expect(response.url()).toContain(`users/${user_id}`);
     const body = await response.json();
     expect(body).toEqual({}); // Verifica se o json veio sem dados como esperado
+  });
+});
+
+test.describe('Post para /users', () => {
+  test('Deve retornar 201 ao criar usuário', async ({ request }) => {
+    const name = 'Jorge';
+    const job = 'Tester';
+    const response = await request.post('users', {
+      data: { name, job },
+    });
+
+    const body: CreateUserResponse = await response.json();
+    expect(response.status()).toBe(201);
+    expect(body.name).toBe(name);
+    expect(body.job).toBe(job);
+
+    expect(body.id).toEqual(expect.any(String));
+    expect(Date.parse(body.createdAt)).not.toBeNaN();
   });
 });
