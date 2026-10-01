@@ -8,6 +8,8 @@
     "test:api": "playwright test tests/api",
     "test:list": "playwright test --list",
     "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "report": "playwright show-report"
   },
   "keywords": [],
@@ -17,6 +19,7 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.3",
+    "prettier": "^3.9.9",
     "typescript": "^7.0.2"
   }
 }

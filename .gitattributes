@@ -1,0 +1,2 @@
+# Normaliza fim de linha no repositorio (evita churn CRLF <-> LF no Windows)
+* text=auto eol=lf
