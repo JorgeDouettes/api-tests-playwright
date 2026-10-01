@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    /* Linguagem e módulos: package.json é CommonJS; TS 7 removeu node10, então usamos nodenext */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    /* Tipos disponíveis globalmente */
+    "types": ["node"],
+
+    /* Rigor: é isso que faz o editor sublinhar erro antes de rodar o teste */
+    "strict": true,
+    /* Acusa variável declarada e nunca usada (código morto) */
+    "noUnusedLocals": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* Só checagem de tipos: o Playwright transpila os testes, o tsc não gera arquivos */
+    "noEmit": true
+  },
+  "include": ["tests/**/*.ts", "playwright.config.ts"]
+}
