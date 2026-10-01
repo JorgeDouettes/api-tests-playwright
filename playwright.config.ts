@@ -4,9 +4,21 @@ import { defineConfig, devices } from '@playwright/test';
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+/**
+ * Fail fast: preferimos um erro claro na abertura do config a um 403/429
+ * misterioso no meio da suíte. A chave mora em .env (ignorado pelo git).
+ */
+const apiKey = process.env.REQRES_API_KEY;
+if (!apiKey) {
+  throw new Error(
+    'REQRES_API_KEY vazia: cole sua chave em .env (raiz do projeto) — app.reqres.in/api-keys',
+  );
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -29,6 +41,11 @@ export default defineConfig({
     baseURL: 'https://reqres.in/api/',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    /* Autenticação e ambiente enviados em TODA requisição da suíte */
+    extraHTTPHeaders: {
+      'x-api-key': apiKey,
+      'X-Reqres-Env': 'prod',
+    },
   },
 
   /* Configure projects for major browsers */
