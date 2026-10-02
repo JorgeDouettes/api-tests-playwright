@@ -22,6 +22,18 @@ interface CreateUserResponse extends CreateUserRequest {
   createdAt: string;
 }
 
+/**
+ * Resposta do POST quando o payload vem incompleto.
+ * A ReqRes não valida campos obrigatórios: ela ecoa apenas o que recebeu,
+ * então `name` e `job` são opcionais aqui — e o campo ausente nem aparece no corpo.
+ */
+interface CreateUserPartialResponse {
+  name?: string;
+  job?: string;
+  id: string;
+  createdAt: string;
+}
+
 test.describe('GET /users/:id', () => {
   test('deve retornar 200 e os dados corretos do usuário quando o ID existe', async ({
     request,
@@ -68,5 +80,48 @@ test.describe('Post para /users', () => {
 
     expect(body.id).toEqual(expect.any(String));
     expect(Date.parse(body.createdAt)).not.toBeNaN();
+  });
+
+  test('Deve retornar 201 e omitir o job quando o payload vem incompleto', async ({ request }) => {
+    const name = 'Jorge';
+    const response = await request.post('users', {
+      data: { name },
+    });
+
+    expect(response.status()).toBe(201);
+    const body: CreateUserPartialResponse = await response.json();
+    expect(body.name).toBe(name);
+    expect(body).not.toHaveProperty('job');
+
+    expect(body.id).toEqual(expect.any(String));
+    expect(Date.parse(body.createdAt)).not.toBeNaN();
+  });
+
+  test('Deve retornar 201 mesmo com payload vazio', async ({ request }) => {
+    const response = await request.post('users', {
+      data: {},
+    });
+
+    expect(response.status()).toBe(201);
+    const body: CreateUserPartialResponse = await response.json();
+    expect(body).not.toHaveProperty('name');
+    expect(body).not.toHaveProperty('job');
+
+    expect(body.id).toEqual(expect.any(String));
+    expect(Date.parse(body.createdAt)).not.toBeNaN();
+  });
+
+  test('Deve retornar 201 mesmo faltando nome', async ({ request }) => {
+    const job = 'Tester';
+    const response = await request.post('users', {
+      data: { job },
+    });
+
+    expect(response.status()).toBe(201);
+    const body: CreateUserPartialResponse = await response.json();
+    expect(body).not.toHaveProperty('name');
+    expect(body.id).toEqual(expect.any(String));
+    expect(Date.parse(body.createdAt)).not.toBeNaN();
+    expect(body.job).toBe(job);
   });
 });
