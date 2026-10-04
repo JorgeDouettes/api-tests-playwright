@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { buildUserPayload, expect, test, UserPayload } from './fixtures/users.fixture';
 
 interface User {
   id: number;
@@ -12,12 +12,7 @@ interface UserResponse {
   data: User;
 }
 
-interface CreateUserRequest {
-  name: string;
-  job: string;
-}
-
-interface CreateUserResponse extends CreateUserRequest {
+interface CreateUserResponse extends Required<UserPayload> {
   id: string;
   createdAt: string;
 }
@@ -35,15 +30,13 @@ interface CreateUserPartialResponse {
 }
 
 test.describe('GET /users/:id', () => {
-  test('deve retornar 200 e os dados corretos do usuário quando o ID existe', async ({
-    request,
-  }) => {
+  test('deve retornar 200 e os dados corretos do usuário quando o ID existe', async ({ api }) => {
     const user_id = 2;
     const status = 200;
     const email = 'janet.weaver@reqres.in';
     const first_name = 'Janet';
     const last_name = 'Weaver';
-    const response = await request.get(`users/${user_id}`);
+    const response = await api.getUser(user_id);
 
     expect(response.status()).toBe(status);
     const body: UserResponse = await response.json();
@@ -53,10 +46,10 @@ test.describe('GET /users/:id', () => {
     expect(body.data.last_name).toBe(last_name);
   });
 
-  test('Deve retornar 404 quando o id não existe', async ({ request }) => {
+  test('Deve retornar 404 quando o id não existe', async ({ api }) => {
     const user_id = 1231234;
     const status = 404;
-    const response = await request.get(`users/${user_id}`);
+    const response = await api.getUser(user_id);
 
     expect(response.status()).toBe(status);
     expect(response.url()).toContain(`users/${user_id}`);
@@ -66,41 +59,35 @@ test.describe('GET /users/:id', () => {
 });
 
 test.describe('Post para /users', () => {
-  test('Deve retornar 201 ao criar usuário', async ({ request }) => {
-    const name = 'Jorge';
-    const job = 'Tester';
-    const response = await request.post('users', {
-      data: { name, job },
-    });
+  test('Deve retornar 201 ao criar usuário', async ({ api }) => {
+    const payload = buildUserPayload();
+    const response = await api.postUser(payload);
 
     const body: CreateUserResponse = await response.json();
     expect(response.status()).toBe(201);
-    expect(body.name).toBe(name);
-    expect(body.job).toBe(job);
+    expect(body.name).toBe(payload.name);
+    expect(body.job).toBe(payload.job);
 
     expect(body.id).toEqual(expect.any(String));
     expect(Date.parse(body.createdAt)).not.toBeNaN();
   });
 
-  test('Deve retornar 201 e omitir o job quando o payload vem incompleto', async ({ request }) => {
-    const name = 'Jorge';
-    const response = await request.post('users', {
-      data: { name },
-    });
+  test('Deve retornar 201 e omitir o job quando o payload vem incompleto', async ({ api }) => {
+    const payload = buildUserPayload({ job: undefined });
+    const response = await api.postUser(payload);
 
     expect(response.status()).toBe(201);
     const body: CreateUserPartialResponse = await response.json();
-    expect(body.name).toBe(name);
+    expect(body.name).toBe(payload.name);
     expect(body).not.toHaveProperty('job');
 
     expect(body.id).toEqual(expect.any(String));
     expect(Date.parse(body.createdAt)).not.toBeNaN();
   });
 
-  test('Deve retornar 201 mesmo com payload vazio', async ({ request }) => {
-    const response = await request.post('users', {
-      data: {},
-    });
+  test('Deve retornar 201 mesmo com payload vazio', async ({ api }) => {
+    const payload = buildUserPayload({ name: undefined, job: undefined });
+    const response = await api.postUser(payload);
 
     expect(response.status()).toBe(201);
     const body: CreateUserPartialResponse = await response.json();
@@ -111,17 +98,15 @@ test.describe('Post para /users', () => {
     expect(Date.parse(body.createdAt)).not.toBeNaN();
   });
 
-  test('Deve retornar 201 mesmo faltando nome', async ({ request }) => {
-    const job = 'Tester';
-    const response = await request.post('users', {
-      data: { job },
-    });
+  test('Deve retornar 201 mesmo faltando nome', async ({ api }) => {
+    const payload = buildUserPayload({ name: undefined });
+    const response = await api.postUser(payload);
 
     expect(response.status()).toBe(201);
     const body: CreateUserPartialResponse = await response.json();
     expect(body).not.toHaveProperty('name');
     expect(body.id).toEqual(expect.any(String));
     expect(Date.parse(body.createdAt)).not.toBeNaN();
-    expect(body.job).toBe(job);
+    expect(body.job).toBe(payload.job);
   });
 });
