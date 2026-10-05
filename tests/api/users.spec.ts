@@ -15,6 +15,7 @@ interface UserResponse {
 interface CreateUserResponse extends Required<UserPayload> {
   id: string;
   createdAt: string;
+  _meta?: unknown;
 }
 
 /**
@@ -28,6 +29,8 @@ interface CreateUserPartialResponse {
   id: string;
   createdAt: string;
 }
+
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 test.describe('GET /users/:id', () => {
   test('deve retornar 200 e os dados corretos do usuário quando o ID existe', async ({ api }) => {
@@ -62,14 +65,15 @@ test.describe('Post /users', () => {
   test('Deve retornar 201 ao criar usuário', async ({ api }) => {
     const payload = buildUserPayload();
     const response = await api.postUser(payload);
-
     const body: CreateUserResponse = await response.json();
+    const { _meta, ...semMeta } = body;
     expect(response.status()).toBe(201);
-    expect(body.name).toBe(payload.name);
-    expect(body.job).toBe(payload.job);
-
-    expect(body.id).toEqual(expect.any(String));
-    expect(Date.parse(body.createdAt)).not.toBeNaN();
+    expect(semMeta).toEqual({
+      name: payload.name,
+      id: expect.any(String),
+      job: payload.job,
+      createdAt: expect.stringMatching(ISO_DATE_REGEX),
+    });
   });
 
   test('Deve retornar 201 e omitir o job quando o payload vem incompleto', async ({ api }) => {
