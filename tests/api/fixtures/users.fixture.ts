@@ -67,7 +67,6 @@ export class ReqresAPI {
 // `use` (e para cobrar que a implementação bata com a declaração).
 type ReqresFixtures = {
   api: ReqresAPI;
-  Userpayload: UserPayload;
 };
 
 // ---------------------------------------------------------------------------
@@ -81,12 +80,6 @@ export const test = base.extend<ReqresFixtures>({
   // Setup = o que roda ANTES do `use`; teardown = o que roda DEPOIS dele.
   api: async ({ request }, use) => {
     await use(new ReqresAPI(request));
-  },
-
-  // Fixture preguiçosa (lazy): só é construída se o teste pedir `Userpayload`.
-  // `({}, use)` = não depende de nenhuma outra fixture.
-  Userpayload: async ({}, use) => {
-    await use(buildUserPayload());
   },
 });
 
