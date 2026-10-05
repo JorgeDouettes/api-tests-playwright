@@ -28,6 +28,7 @@ interface CreateUserPartialResponse {
   job?: string;
   id: string;
   createdAt: string;
+  _meta?: unknown;
 }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -66,12 +67,12 @@ test.describe('Post /users', () => {
     const payload = buildUserPayload();
     const response = await api.postUser(payload);
     const body: CreateUserResponse = await response.json();
+    expect(response.status()).toBe(201);
     const { _meta, ...semMeta } = body;
     expect(response.status()).toBe(201);
     expect(semMeta).toEqual({
-      name: payload.name,
+      ...payload,
       id: expect.any(String),
-      job: payload.job,
       createdAt: expect.stringMatching(ISO_DATE_REGEX),
     });
   });
@@ -80,37 +81,39 @@ test.describe('Post /users', () => {
     const payload = buildUserPayload({ job: undefined });
     const response = await api.postUser(payload);
 
-    expect(response.status()).toBe(201);
     const body: CreateUserPartialResponse = await response.json();
-    expect(body.name).toBe(payload.name);
-    expect(body).not.toHaveProperty('job');
-
-    expect(body.id).toEqual(expect.any(String));
-    expect(Date.parse(body.createdAt)).not.toBeNaN();
+    expect(response.status()).toBe(201);
+    const { _meta, ...semMeta } = body;
+    expect(semMeta).toEqual({
+      ...payload,
+      id: expect.any(String),
+      createdAt: expect.stringMatching(ISO_DATE_REGEX),
+    });
   });
 
   test('Deve retornar 201 mesmo com payload vazio', async ({ api }) => {
     const payload = buildUserPayload({ name: undefined, job: undefined });
     const response = await api.postUser(payload);
-
-    expect(response.status()).toBe(201);
     const body: CreateUserPartialResponse = await response.json();
-    expect(body).not.toHaveProperty('name');
-    expect(body).not.toHaveProperty('job');
-
-    expect(body.id).toEqual(expect.any(String));
-    expect(Date.parse(body.createdAt)).not.toBeNaN();
+    expect(response.status()).toBe(201);
+    const { _meta, ...semMeta } = body;
+    expect(semMeta).toEqual({
+      ...payload,
+      id: expect.any(String),
+      createdAt: expect.stringMatching(ISO_DATE_REGEX),
+    });
   });
 
   test('Deve retornar 201 mesmo faltando nome', async ({ api }) => {
     const payload = buildUserPayload({ name: undefined });
     const response = await api.postUser(payload);
-
-    expect(response.status()).toBe(201);
     const body: CreateUserPartialResponse = await response.json();
-    expect(body).not.toHaveProperty('name');
-    expect(body.id).toEqual(expect.any(String));
-    expect(Date.parse(body.createdAt)).not.toBeNaN();
-    expect(body.job).toBe(payload.job);
+    expect(response.status()).toBe(201);
+    const { _meta, ...semMeta } = body;
+    expect(semMeta).toEqual({
+      ...payload,
+      id: expect.any(String),
+      createdAt: expect.stringMatching(ISO_DATE_REGEX),
+    });
   });
 });
