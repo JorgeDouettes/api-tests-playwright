@@ -76,7 +76,7 @@ test.describe('GET /users/:id', () => {
   });
 });
 
-test.describe('Post /users', () => {
+test.describe('POST /users', () => {
   test('Deve retornar 201 ao criar usuário', async ({ api }) => {
     const payload = buildUserPayload();
     const response = await api.postUser(payload);
