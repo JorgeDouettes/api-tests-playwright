@@ -1,4 +1,5 @@
 import { buildUserPayload, expect, test, UserPayload } from './fixtures/reqres.fixture';
+import { UserResponseSchema } from './schemas/user.schema';
 
 interface User {
   id: number;
@@ -6,12 +7,6 @@ interface User {
   first_name: string;
   last_name: string;
   avatar: string;
-}
-
-interface UserResponse {
-  data: User;
-  support: { url: string; text: string };
-  _meta?: unknown;
 }
 
 interface CreateUserResponse extends Required<UserPayload> {
@@ -62,22 +57,8 @@ test.describe('GET /users/:id', () => {
     const response = await api.getUser(userId);
 
     expect(response.status()).toBe(status);
-    const body: UserResponse = await response.json();
-    const { _meta, ...semMeta } = body;
-
-    expect(semMeta).toEqual({
-      data: {
-        id: userId,
-        email: email,
-        first_name: first_name,
-        last_name: last_name,
-        avatar: expect.stringMatching(/^https:\/\/.+\.jpg$/),
-      },
-      support: {
-        url: expect.any(String),
-        text: expect.any(String),
-      },
-    });
+    const body = UserResponseSchema.parse(await response.json());
+    expect(body.data).toMatchObject({ id: userId, email, first_name, last_name });
   });
 
   test('Deve retornar 404 quando o id não existe', async ({ api }) => {
