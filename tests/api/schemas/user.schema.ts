@@ -8,11 +8,23 @@ export const UserSchema = z.strictObject({
   avatar: z.url(),
 });
 
+const SupportSchema = z.strictObject({
+  url: z.url(),
+  text: z.string(),
+});
+
 export const UserResponseSchema = z.strictObject({
-  data: UserSchema, // ← reaproveita o schema de cima
-  support: z.strictObject({
-    url: z.url(),
-    text: z.string(),
-  }),
+  data: UserSchema,
+  support: SupportSchema,
+  _meta: z.unknown().optional(),
+});
+
+export const UserListResponseSchema = z.strictObject({
+  page: z.number(),
+  per_page: z.number(),
+  total: z.number(),
+  total_pages: z.number(),
+  data: z.array(UserSchema),
+  support: SupportSchema,
   _meta: z.unknown().optional(),
 });
