@@ -12,7 +12,6 @@ interface UserResponse {
   data: User;
   support: { url: string; text: string };
   _meta?: unknown;
-  avatar: { url: string };
 }
 
 interface CreateUserResponse extends Required<UserPayload> {
@@ -31,6 +30,23 @@ interface CreateUserPartialResponse {
   job?: string;
   id: string;
   createdAt: string;
+  _meta?: unknown;
+}
+
+interface UpdateResponse {
+  name?: string;
+  job?: string;
+  updatedAt: string;
+  _meta?: unknown;
+}
+
+interface UserListResponse {
+  page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+  data: User[];
+  support: { url: string; text: string };
   _meta?: unknown;
 }
 
@@ -129,5 +145,96 @@ test.describe('POST /users', () => {
       id: expect.any(String),
       createdAt: expect.stringMatching(ISO_DATE_REGEX),
     });
+  });
+});
+test.describe('PUT /users/:id', () => {
+  test('Deve retornar 200 com data de update', async ({ api }) => {
+    const payload = buildUserPayload({ job: 'QA' });
+    const response = await api.update(2, payload);
+    const body: UpdateResponse = await response.json();
+    expect(response.status()).toBe(200);
+    const { _meta, ...semMeta } = body;
+    expect(semMeta).toEqual({
+      ...payload,
+      updatedAt: expect.stringMatching(ISO_DATE_REGEX),
+    });
+  });
+
+  test('Deve retornar 200 e validar que a ReqRes ecoa somente o job mesmo sendo PUT', async ({
+    api,
+  }) => {
+    const payload = buildUserPayload({ name: undefined, job: 'QA Senior' });
+    const response = await api.update(2, payload);
+    const body: UpdateResponse = await response.json();
+    expect(response.status()).toBe(200);
+    const { _meta, ...semMeta } = body;
+    expect(semMeta).toEqual({
+      ...payload,
+      updatedAt: expect.stringMatching(ISO_DATE_REGEX),
+    });
+  });
+});
+
+test.describe('PATCH /users/:id', () => {
+  test('Deve retornar 200 e atualizar somente o job', async ({ api }) => {
+    const payload = buildUserPayload({ name: undefined, job: 'QA Senior' });
+    const response = await api.parcialupdate(2, payload);
+    const body: UpdateResponse = await response.json();
+    expect(response.status()).toBe(200);
+    const { _meta, ...semMeta } = body;
+    expect(semMeta).toEqual({
+      ...payload,
+      updatedAt: expect.stringMatching(ISO_DATE_REGEX),
+    });
+  });
+});
+
+test.describe('DELETE /users/:id', () => {
+  test('Deve retornar 204 e corpo vazio ao remover usuário', async ({ api }) => {
+    const response = await api.remove(2);
+    expect(response.status()).toBe(204);
+    const body = await response.text();
+    expect(body).toBe('');
+  });
+});
+
+test.describe('GET /users?page=:page', () => {
+  test('Deve retornar 200 e os usuários da página solicitada', async ({ api }) => {
+    const page = 2;
+    const response = await api.getpage(page);
+    expect(response.status()).toBe(200);
+    const body: UserListResponse = await response.json();
+    const { _meta, ...semMeta } = body;
+
+    // 1. Metadados da página; o conteúdo de `data` é validado abaixo
+    expect(semMeta).toEqual({
+      page,
+      per_page: 6,
+      total: 12,
+      total_pages: 2,
+      data: expect.any(Array),
+      support: {
+        url: expect.any(String),
+        text: expect.any(String),
+      },
+    });
+
+    // 2. A lista tem o tamanho que a própria API anunciou
+    expect(body.data).toHaveLength(body.per_page);
+
+    // 3. É a página certa: a página 2 traz os ids 7 a 12
+    const ids = body.data.map((user) => user.id);
+    expect(ids).toEqual([7, 8, 9, 10, 11, 12]);
+
+    // 4. Cada usuário segue o schema de User
+    for (const user of body.data) {
+      expect(user).toEqual({
+        id: expect.any(Number),
+        email: expect.stringMatching(/@reqres\.in$/),
+        first_name: expect.any(String),
+        last_name: expect.any(String),
+        avatar: expect.stringMatching(/^https:\/\/.+\.jpg$/),
+      });
+    }
   });
 });
