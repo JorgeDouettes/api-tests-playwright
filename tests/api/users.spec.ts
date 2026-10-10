@@ -10,6 +10,9 @@ interface User {
 
 interface UserResponse {
   data: User;
+  support: { url: string; text: string };
+  _meta?: unknown;
+  avatar: { url: string };
 }
 
 interface CreateUserResponse extends Required<UserPayload> {
@@ -44,10 +47,21 @@ test.describe('GET /users/:id', () => {
 
     expect(response.status()).toBe(status);
     const body: UserResponse = await response.json();
-    expect(body.data.id).toBe(userId);
-    expect(body.data.email).toBe(email);
-    expect(body.data.first_name).toBe(first_name);
-    expect(body.data.last_name).toBe(last_name);
+    const { _meta, ...semMeta } = body;
+
+    expect(semMeta).toEqual({
+      data: {
+        id: userId,
+        email: email,
+        first_name: first_name,
+        last_name: last_name,
+        avatar: expect.stringMatching(/^https:\/\/.+\.jpg$/),
+      },
+      support: {
+        url: expect.any(String),
+        text: expect.any(String),
+      },
+    });
   });
 
   test('Deve retornar 404 quando o id não existe', async ({ api }) => {
