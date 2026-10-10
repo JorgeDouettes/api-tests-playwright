@@ -42,6 +42,22 @@ export class ReqresAPI {
   login(payload: CredentialsPayload) {
     return this.request.post('login', { data: payload });
   }
+
+  update(user: number, payload: UserPayload) {
+    return this.request.put(`users/${user}`, { data: payload });
+  }
+
+  parcialupdate(user: number, payload: UserPayload) {
+    return this.request.patch(`users/${user}`, { data: payload });
+  }
+
+  remove(id: number) {
+    return this.request.delete(`users/${id}`);
+  }
+
+  getpage(page: number) {
+    return this.request.get('users', { params: { page } });
+  }
 }
 
 type ReqresFixtures = {
