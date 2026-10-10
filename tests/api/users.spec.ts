@@ -1,4 +1,4 @@
-import { buildUserPayload, expect, test, UserPayload } from './fixtures/users.fixture';
+import { buildUserPayload, expect, test, UserPayload } from './fixtures/reqres.fixture';
 
 interface User {
   id: number;
