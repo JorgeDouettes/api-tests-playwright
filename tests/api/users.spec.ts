@@ -1,33 +1,10 @@
-import { buildUserPayload, expect, test, UserPayload } from './fixtures/reqres.fixture';
-import { UserListResponseSchema, UserResponseSchema } from './schemas/user.schema';
-
-interface CreateUserResponse extends Required<UserPayload> {
-  id: string;
-  createdAt: string;
-  _meta?: unknown;
-}
-
-/**
- * Resposta do POST quando o payload vem incompleto.
- * A ReqRes não valida campos obrigatórios: ela ecoa apenas o que recebeu,
- * então `name` e `job` são opcionais aqui — e o campo ausente nem aparece no corpo.
- */
-interface CreateUserPartialResponse {
-  name?: string;
-  job?: string;
-  id: string;
-  createdAt: string;
-  _meta?: unknown;
-}
-
-interface UpdateResponse {
-  name?: string;
-  job?: string;
-  updatedAt: string;
-  _meta?: unknown;
-}
-
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+import { buildUserPayload, expect, test } from './fixtures/reqres.fixture';
+import {
+  CreateUserResponseSchema,
+  UpdateUserResponseSchema,
+  UserListResponseSchema,
+  UserResponseSchema,
+} from './schemas/user.schema';
 
 test.describe('GET /users/:id', () => {
   test('deve retornar 200 e os dados corretos do usuário quando o ID existe', async ({ api }) => {
@@ -59,68 +36,48 @@ test.describe('POST /users', () => {
   test('Deve retornar 201 ao criar usuário', async ({ api }) => {
     const payload = buildUserPayload();
     const response = await api.postUser(payload);
-    const body: CreateUserResponse = await response.json();
     expect(response.status()).toBe(201);
-    const { _meta, ...semMeta } = body;
-    expect(response.status()).toBe(201);
-    expect(semMeta).toEqual({
-      ...payload,
-      id: expect.any(String),
-      createdAt: expect.stringMatching(ISO_DATE_REGEX),
-    });
+    const body = CreateUserResponseSchema.parse(await response.json());
+    const { _meta, id, createdAt, ...eco } = body;
+    expect(eco).toEqual(payload);
   });
 
   test('Deve retornar 201 e omitir o job quando o payload vem incompleto', async ({ api }) => {
     const payload = buildUserPayload({ job: undefined });
     const response = await api.postUser(payload);
 
-    const body: CreateUserPartialResponse = await response.json();
     expect(response.status()).toBe(201);
-    const { _meta, ...semMeta } = body;
-    expect(semMeta).toEqual({
-      ...payload,
-      id: expect.any(String),
-      createdAt: expect.stringMatching(ISO_DATE_REGEX),
-    });
+    const body = CreateUserResponseSchema.parse(await response.json());
+    const { _meta, id, createdAt, ...eco } = body;
+    expect(eco).toEqual(payload);
   });
 
   test('Deve retornar 201 mesmo com payload vazio', async ({ api }) => {
     const payload = buildUserPayload({ name: undefined, job: undefined });
     const response = await api.postUser(payload);
-    const body: CreateUserPartialResponse = await response.json();
     expect(response.status()).toBe(201);
-    const { _meta, ...semMeta } = body;
-    expect(semMeta).toEqual({
-      ...payload,
-      id: expect.any(String),
-      createdAt: expect.stringMatching(ISO_DATE_REGEX),
-    });
+    const body = CreateUserResponseSchema.parse(await response.json());
+    const { _meta, id, createdAt, ...eco } = body;
+    expect(eco).toEqual(payload);
   });
 
   test('Deve retornar 201 mesmo faltando nome', async ({ api }) => {
     const payload = buildUserPayload({ name: undefined });
     const response = await api.postUser(payload);
-    const body: CreateUserPartialResponse = await response.json();
     expect(response.status()).toBe(201);
-    const { _meta, ...semMeta } = body;
-    expect(semMeta).toEqual({
-      ...payload,
-      id: expect.any(String),
-      createdAt: expect.stringMatching(ISO_DATE_REGEX),
-    });
+    const body = CreateUserResponseSchema.parse(await response.json());
+    const { _meta, id, createdAt, ...eco } = body;
+    expect(eco).toEqual(payload);
   });
 });
 test.describe('PUT /users/:id', () => {
   test('Deve retornar 200 com data de update', async ({ api }) => {
     const payload = buildUserPayload({ job: 'QA' });
     const response = await api.update(2, payload);
-    const body: UpdateResponse = await response.json();
     expect(response.status()).toBe(200);
-    const { _meta, ...semMeta } = body;
-    expect(semMeta).toEqual({
-      ...payload,
-      updatedAt: expect.stringMatching(ISO_DATE_REGEX),
-    });
+    const body = UpdateUserResponseSchema.parse(await response.json());
+    const { _meta, updatedAt, ...eco } = body;
+    expect(eco).toEqual(payload);
   });
 
   test('Deve retornar 200 e validar que a ReqRes ecoa somente o job mesmo sendo PUT', async ({
@@ -128,13 +85,10 @@ test.describe('PUT /users/:id', () => {
   }) => {
     const payload = buildUserPayload({ name: undefined, job: 'QA Senior' });
     const response = await api.update(2, payload);
-    const body: UpdateResponse = await response.json();
     expect(response.status()).toBe(200);
-    const { _meta, ...semMeta } = body;
-    expect(semMeta).toEqual({
-      ...payload,
-      updatedAt: expect.stringMatching(ISO_DATE_REGEX),
-    });
+    const body = UpdateUserResponseSchema.parse(await response.json());
+    const { _meta, updatedAt, ...eco } = body;
+    expect(eco).toEqual(payload);
   });
 });
 
@@ -142,13 +96,10 @@ test.describe('PATCH /users/:id', () => {
   test('Deve retornar 200 e atualizar somente o job', async ({ api }) => {
     const payload = buildUserPayload({ name: undefined, job: 'QA Senior' });
     const response = await api.parcialupdate(2, payload);
-    const body: UpdateResponse = await response.json();
     expect(response.status()).toBe(200);
-    const { _meta, ...semMeta } = body;
-    expect(semMeta).toEqual({
-      ...payload,
-      updatedAt: expect.stringMatching(ISO_DATE_REGEX),
-    });
+    const body = UpdateUserResponseSchema.parse(await response.json());
+    const { _meta, updatedAt, ...eco } = body;
+    expect(eco).toEqual(payload);
   });
 });
 

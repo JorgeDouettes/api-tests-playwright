@@ -28,3 +28,20 @@ export const UserListResponseSchema = z.strictObject({
   support: SupportSchema,
   _meta: z.unknown().optional(),
 });
+
+// A ReqRes não valida campos obrigatórios: ela ecoa apenas o que recebeu,
+// então `name` e `job` são opcionais — o campo não enviado nem aparece no corpo.
+export const CreateUserResponseSchema = z.strictObject({
+  name: z.string().optional(),
+  job: z.string().optional(),
+  id: z.string(),
+  createdAt: z.iso.datetime(),
+  _meta: z.unknown().optional(),
+});
+
+export const UpdateUserResponseSchema = z.strictObject({
+  name: z.string().optional(),
+  job: z.string().optional(),
+  updatedAt: z.iso.datetime(),
+  _meta: z.unknown().optional(),
+});
