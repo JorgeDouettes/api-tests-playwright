@@ -46,7 +46,7 @@ test.describe('POST /register', () => {
 });
 
 test.describe('POST /login', () => {
-  test('Login com sucesso', async ({ api }) => {
+  test('Deve retornar 200 quando login estiver certo', async ({ api }) => {
     const payload = buildCredentials({ password: 'cityslicka' });
     const response = await api.login(payload);
     const body: LoginUser = await response.json();
@@ -54,6 +54,15 @@ test.describe('POST /login', () => {
     const { _meta, ...semMeta } = body;
     expect(semMeta).toEqual({
       token: 'QpwL5tke4Pnpja7X4',
+    });
+  });
+  test('Deve retornar 400 quando o login estiver sem senha', async ({ api }) =>{
+    const payload = buildCredentials({password: undefined});
+    const response = await api.login(payload);
+    const body: ErrorResponse = await response.json();
+    expect(response.status()).toBe(400)
+    expect(body).toEqual({
+        error: "Missing password",
     });
   });
 });
